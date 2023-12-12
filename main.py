@@ -1,6 +1,12 @@
 from conversation import Conversation
+from openai_service import InterruptFlag
 import argparse
 import asyncio
+import signal
+
+
+def stream_signal_handler(flag: InterruptFlag):
+    flag.set_streaming_interrupt(True)
 
 
 async def main():
@@ -17,7 +23,13 @@ async def main():
     )
     args = parser.parse_args()
 
-    conversation = Conversation(args)
+    # Prevent default asyncio CTRL+C handling so Conversation can handle it
+    flag = InterruptFlag()
+    # Set up the CTRL+C handler for streaming interruption
+    asyncio.get_running_loop().add_signal_handler(
+        signal.SIGINT, stream_signal_handler, flag
+    )
+    conversation = Conversation(args, flag)
     await conversation.run()
 
 

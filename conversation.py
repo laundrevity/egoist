@@ -1,4 +1,4 @@
-from openai_service import OpenAIService
+from openai_service import OpenAIService, InterruptFlag
 from toolkit import ToolKit
 from models import Message
 from typing import List
@@ -9,13 +9,14 @@ import json
 
 
 class Conversation:
-    def __init__(self, args: argparse.Namespace) -> None:
+    def __init__(self, args: argparse.Namespace, flag: InterruptFlag) -> None:
         self.args = args
+        self.flag = flag
         self.messages: List[Message] = self.initialize_messages()
         self.toolkit = ToolKit()
         # assume we always want to use the latest model, gpt-4-1106-preview
         self.openai_service = OpenAIService(
-            self.toolkit.get_tools_json(), verbose=False
+            self.toolkit.get_tools_json(), flag, verbose=False
         )
 
     async def run(self):
@@ -56,18 +57,22 @@ class Conversation:
                 )
 
             user_input = self.get_input()
+
             self.messages.append(Message(role="user", content=user_input))
 
     def get_input(self) -> str:
         while True:
-            user_input = input("> ")
-            if user_input == "list tools":
-                print("Available tools:")
-                for tool_name, tool in self.toolkit.tools.items():
-                    print(f"{tool_name} --- {tool.description}")
-            else:
-                break
-        return user_input
+            try:
+                user_input = input("> ")
+                if user_input == "list tools":
+                    print(f"Tool menu:")
+                    for tool_name, tool in self.toolkit.tools.items():
+                        print(f"{tool_name} --- {tool.description}")
+                else:
+                    return user_input
+            except EOFError:
+                print(f"CTRL+D detected, exiting program...")
+                exit(0)
 
     def initialize_messages(self):
         messages = []

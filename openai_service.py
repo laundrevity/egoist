@@ -3,14 +3,39 @@ from models import Message, StreamChunk, ToolCall
 from pydantic import ValidationError
 from typing import List, Dict
 from rich import print
+import asyncio
 import httpx
 import json
 import os
 
 
+class StreamingInterruptedException(Exception):
+    def ___init__(self, message):
+        super().__init__(message)
+
+
+class InterruptFlag:
+    def __init__(self):
+        self.streaming_interrupted = False
+        self.user_input_interrupted = False
+
+    def set_streaming_interrupt(self, value: bool):
+        self.streaming_interrupted = value
+
+    def get_streaming_interrupt(self) -> bool:
+        return self.streaming_interrupted
+
+    def set_user_input_interrupt(self, value: bool):
+        self.user_input_interrupted = value
+
+    def get_user_input_interrupt(self) -> bool:
+        return self.user_input_interrupted
+
+
 class OpenAIService:
-    def __init__(self, tools_json: List[Dict], verbose=False):
+    def __init__(self, tools_json: List[Dict], flag: InterruptFlag, verbose=False):
         self.tools_json = tools_json
+        self.flag = flag
         self.verbose = verbose
         self.timeout = 300
 
@@ -33,8 +58,14 @@ class OpenAIService:
         if tools:
             payload["tools"] = self.tools_json
 
-        stream_chunks = await self.get_stream_chunks(payload)
-        message = self.parse_stream_chunks(stream_chunks)
+        try:
+            stream_chunks = await self.get_stream_chunks(payload)
+            message = self.parse_stream_chunks(stream_chunks)
+        except StreamingInterruptedException as e:
+            print(e)
+            message = Message(
+                role="system", content="\nStreaming response interrupted by user."
+            )
 
         if self.verbose:
             print(f"Received message: {message}")
@@ -54,12 +85,14 @@ class OpenAIService:
                 await response.aread()
 
             if not bad_status_code:
+                self.flag.set_streaming_interrupt(False)
+
                 async for line in response.aiter_lines():
                     # print(line, flush=True)
 
                     trim_line = line[6:]
 
-                    if trim_line:
+                    if trim_line and not self.flag.get_streaming_interrupt():
                         try:
                             line_json = json.loads(trim_line)
 
@@ -96,8 +129,15 @@ class OpenAIService:
                                 if self.verbose:
                                     print(f"Got JSON decode error on line: {trim_line}")
 
+                    if self.flag.get_streaming_interrupt():
+                        raise StreamingInterruptedException(
+                            "Streaming interrupted by user."
+                        )
+
         if bad_status_code:
-            print(f"Got bad status code: {response.status_code}, {response.content=}\npayload: {json.dumps(payload, indent=4)}")
+            print(
+                f"Got bad status code: {response.status_code}, {response.content=}\npayload: {json.dumps(payload, indent=4)}"
+            )
 
         print("")
 
@@ -158,7 +198,7 @@ class OpenAIService:
             elif choice.finish_reason == "tool_calls":
                 # End of a tool call sequence
                 break
-        
+
         if content:
             message.content = content
         else:

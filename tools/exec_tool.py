@@ -41,6 +41,9 @@ class ExecTool(BaseTool):
                     if k not in self.import_namespace
                 }
             )
+        except Exception as e:
+            sys.stdout = original_stdout
+            return f"Error executing code={input_data.code}: {e}"
         finally:
             sys.stdout = original_stdout
 
