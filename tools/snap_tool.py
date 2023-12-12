@@ -31,6 +31,7 @@ class SnapTool(BaseTool):
                     line_num = 1
                     for line in f:
                         concatenated_code += f'{line_num:>6}  {line}'
+                        line_num += 1
                 else:
                     concatenated_code += f.read()
 

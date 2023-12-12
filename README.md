@@ -24,6 +24,12 @@ cd egoist
 pip install -r requirements.txt
 ```
 
+For extra isolation, it is recommended to run the tool within a Docker container, which can be started and entered like this:
+```bash
+docker compose up -d --build
+docker compose exec app bash
+```
+
 ## Running Egoist
 
 To start the Egoist AI tool management system, simply use the following command:
@@ -42,5 +48,5 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact
 
-Your Name - [@your_twitter_handle](https://twitter.com/your_twitter_handle)
-Project Link: [https://github.com/your-username/egoist](https://github.com/your-username/egoist)
+Conor Mahany: conor@mahany.io<br>
+Project Link: [https://github.com/laundrevity/egoist](https://github.com/laundrevity/egoist)
