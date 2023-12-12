@@ -15,7 +15,7 @@ class SnapTool(BaseTool):
     async def execute(self, input_data: SnapToolInput) -> str:
         concatenated_code = ""
 
-        dirs_to_include = ['tools']
+        dirs_to_include = ['tools', 'tests']
         code_files = [path for path in os.listdir(os.getcwd()) if path.endswith('.py')]
         for source_dir in dirs_to_include:
             code_files += [os.path.join(source_dir, path) for path in os.listdir(os.path.join(os.getcwd(), source_dir)) if path.endswith('.py')]
