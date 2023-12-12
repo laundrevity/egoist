@@ -3,16 +3,20 @@ from toolkit import ToolKit
 from models import Message
 from typing import List
 from rich import print
+import datetime
 import argparse
 import asyncio
 import json
+import os
 
 
 class Conversation:
     def __init__(self, args: argparse.Namespace, flag: InterruptFlag) -> None:
         self.args = args
         self.flag = flag
-        self.messages: List[Message] = self.initialize_messages()
+        self.messages: List[Message] = []
+        self.conversation_id = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+        self.initialize_messages()
         self.toolkit = ToolKit()
         # assume we always want to use the latest model, gpt-4-1106-preview
         self.openai_service = OpenAIService(
@@ -23,7 +27,7 @@ class Conversation:
         while True:
             # get a message from GPT
             message = await self.openai_service.get_message(self.messages, tools=True)
-            self.messages.append(message)
+            self.add_message(message)
 
             if message.tool_calls:
                 tool_call_tasks = []
@@ -55,10 +59,11 @@ class Conversation:
                 message = await self.openai_service.get_message(
                     self.messages, tools=False
                 )
+                self.add_message(message)
 
             user_input = self.get_input()
 
-            self.messages.append(Message(role="user", content=user_input))
+            self.add_message(Message(role="user", content=user_input))
 
     def get_input(self) -> str:
         while True:
@@ -75,15 +80,13 @@ class Conversation:
                 exit(0)
 
     def initialize_messages(self):
-        messages = []
         system_prompt = "You are an AI program with agency. You can choose to respond to the user with text, or use the tools that are exposed to you. Do not use tools if you can answer the question easily, such as `what is 2+2`."
         if self.args.state:
             print("including system state")
             system_prompt += f"Current project source code:\n{open('state.txt').read()}"
-        messages.append(Message(role="system", content=system_prompt))
-        messages.append(Message(role="user", content=self.args.prompt))
 
-        return messages
+        self.add_message(Message(role="system", content=system_prompt))
+        self.add_message(Message(role="user", content=self.args.prompt))
 
     def get_messages_json(self):
         jsons = []
@@ -92,4 +95,13 @@ class Conversation:
         return jsons
 
     def add_message(self, message: Message):
+        conversations_dir = os.path.join(os.getcwd(), "conversations")
+        if not os.path.exists(conversations_dir):
+            os.makedirs(conversations_dir)
         self.messages.append(message)
+
+        conversation_path = os.path.join(
+            conversations_dir, f"{self.conversation_id}.json"
+        )
+        with open(conversation_path, "w") as fp:
+            json.dump(self.get_messages_json(), fp, indent=4)

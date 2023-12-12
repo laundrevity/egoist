@@ -1,5 +1,6 @@
 from tools.base_tool import BaseTool
 from pydantic import BaseModel, Field
+import traceback
 import sys
 import io
 
@@ -43,7 +44,7 @@ class ExecTool(BaseTool):
             )
         except Exception as e:
             sys.stdout = original_stdout
-            return f"Error executing code={input_data.code}: {e}"
+            return f"Error executing code={input_data.code}:\n{e}\n{traceback.format_exc()}"
         finally:
             sys.stdout = original_stdout
 
