@@ -18,12 +18,16 @@ class ToolKit:
         tools_package = importlib.import_module("tools")
         tools = {}
         for _, name, ispkg in pkgutil.iter_modules(
-            tools_package.__path__,
-            tools_package.__name__ + "."):
+            tools_package.__path__, tools_package.__name__ + "."
+        ):
             if not ispkg:
                 module = importlib.import_module(name)
                 for member_name, obj in inspect.getmembers(module):
-                    if inspect.isclass(obj) and issubclass(obj, BaseTool) and member_name != 'BaseTool':
+                    if (
+                        inspect.isclass(obj)
+                        and issubclass(obj, BaseTool)
+                        and member_name != "BaseTool"
+                    ):
                         tools[member_name] = obj(self)
 
         return tools
@@ -35,8 +39,8 @@ class ToolKit:
                 "function": {
                     "name": tool_name,
                     "description": tool.description,
-                    "parameters": tool.input_model.model_json_schema()
-                }
+                    "parameters": tool.input_model.model_json_schema(),
+                },
             }
             for tool_name, tool in self.tools.items()
         ]
@@ -48,9 +52,11 @@ class ToolKit:
         else:
             print(f"{tool_call.function.arguments=}")
             tool = self.tools[name]
-            
+
             try:
-                tool_input = tool.input_model.model_validate(json.loads(tool_call.function.arguments))
+                tool_input = tool.input_model.model_validate(
+                    json.loads(tool_call.function.arguments)
+                )
                 return await self.tools[name].execute(tool_input)
             except ValidationError as e:
                 error_str = f"Error validating {tool_call.function.arguments=}: {e}"
@@ -58,6 +64,6 @@ class ToolKit:
                 return error_str
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     tk = ToolKit()
     print(tk.get_tools_json())

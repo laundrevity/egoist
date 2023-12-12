@@ -27,34 +27,40 @@ class Conversation:
             if message.tool_calls:
                 tool_call_tasks = []
                 for tool_call in message.tool_calls:
-                    tool_call_tasks.append(asyncio.create_task(self.toolkit.execute_tool(tool_call)))
+                    tool_call_tasks.append(
+                        asyncio.create_task(self.toolkit.execute_tool(tool_call))
+                    )
                 results = await asyncio.gather(*tool_call_tasks)
 
                 print("=> ")
                 for result in results:
                     try:
-                        result_json = json.loads(result.replace('\n', ''))
+                        result_json = json.loads(result.replace("\n", ""))
                         print(json.dumps(result_json, indent=4))
                     except json.JSONDecodeError:
                         print(result)
 
                 for result, tool_call in zip(results, message.tool_calls):
-                    self.add_message(Message(
-                        role="tool", 
-                        content=result,
-                        tool_call_id=tool_call.id,
-                        name=tool_call.function.name
-                    ))
-                
+                    self.add_message(
+                        Message(
+                            role="tool",
+                            content=result,
+                            tool_call_id=tool_call.id,
+                            name=tool_call.function.name,
+                        )
+                    )
+
                 # Now get a message without tool calls
-                message = await self.openai_service.get_message(self.messages, tools=False)
+                message = await self.openai_service.get_message(
+                    self.messages, tools=False
+                )
 
             user_input = self.get_input()
             self.messages.append(Message(role="user", content=user_input))
-    
+
     def get_input(self) -> str:
         while True:
-            user_input = input('> ')
+            user_input = input("> ")
             if user_input == "list tools":
                 print("Available tools:")
                 for tool_name, tool in self.toolkit.tools.items():
@@ -62,7 +68,6 @@ class Conversation:
             else:
                 break
         return user_input
-
 
     def initialize_messages(self):
         messages = []

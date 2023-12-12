@@ -9,20 +9,29 @@ import os
 
 
 class FileOperationType(Enum):
-    CREATE = 'create'
-    DELETE = 'delete'
-    INSERT_LINE = 'insert_line'
-    UPDATE_LINE = 'update_line'
-    DELETE_LINE = 'delete_line'
+    CREATE = "create"
+    DELETE = "delete"
+    INSERT_LINE = "insert_line"
+    UPDATE_LINE = "update_line"
+    DELETE_LINE = "delete_line"
+
 
 class FileOperation(BaseModel):
     operation_type: FileOperationType = Field(description="Type of file operation")
     path: str = Field(description="Path of the file to operate on")
-    content: Optional[str] = Field(description="New file content for create / insert_line / update_line", default=None)
-    line_number: Optional[int] = Field(description="Line number of file operation for line-specific operations", default=None)
+    content: Optional[str] = Field(
+        description="New file content for create / insert_line / update_line",
+        default=None,
+    )
+    line_number: Optional[int] = Field(
+        description="Line number of file operation for line-specific operations",
+        default=None,
+    )
+
 
 class FileToolInput(BaseModel):
     operations: List[FileOperation]
+
 
 class FileTool(BaseTool):
     input_model = FileToolInput
@@ -32,7 +41,7 @@ class FileTool(BaseTool):
         for op in input_data.operations:
             match op.operation_type:
                 case FileOperationType.CREATE:
-                    with open(op.path, 'w') as file:
+                    with open(op.path, "w") as file:
                         file.write(op.content or "")
                 case FileOperationType.DELETE:
                     Path(op.path).unlink(missing_ok=True)
@@ -49,8 +58,8 @@ class FileTool(BaseTool):
                     del content[op.line_number]
                     Path(op.path).write_text("\n".join(content))
 
-        return 'File operations executed successfully.'
-    
+        return "File operations executed successfully."
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     print(FileToolInput.model_dump())

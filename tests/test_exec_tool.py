@@ -14,6 +14,7 @@ async def test_exec_tool_execute_simple_code():
 
     assert "10" in result  # Check if the output contains the expected result
 
+
 @pytest.mark.asyncio
 async def test_exec_tool_variable_persistence():
     toolkit = ToolKit()
@@ -24,8 +25,9 @@ async def test_exec_tool_variable_persistence():
 
     result_1 = await tool.execute(ExecToolInput(code=code_1))
     result_2 = await tool.execute(ExecToolInput(code=code_2))
-    
+
     assert result_2.strip() == "10"
+
 
 @pytest.mark.asyncio
 async def test_exec_tool_import_function_def():
@@ -39,5 +41,5 @@ async def test_exec_tool_import_function_def():
     result_2 = await tool.execute(ExecToolInput(code=code_2))
 
     random_number = float(result_2)
-    
+
     assert 0 < random_number < 1
