@@ -83,7 +83,7 @@ class Conversation:
     def get_messages_json(self):
         jsons = []
         for message in self.messages:
-            jsons.append(message.model_dump(exclude_unset=True))
+            jsons.append(message.model_dump(exclude_unset=True, exclude_none=True))
         return jsons
 
     def add_message(self, message: Message):

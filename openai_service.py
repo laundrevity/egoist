@@ -97,7 +97,7 @@ class OpenAIService:
                                     print(f"Got JSON decode error on line: {trim_line}")
 
         if bad_status_code:
-            print(f"Got bad status code: {response.status_code}, {response.content=}")
+            print(f"Got bad status code: {response.status_code}, {response.content=}\npayload: {json.dumps(payload, indent=4)}")
 
         print("")
 
@@ -158,8 +158,10 @@ class OpenAIService:
             elif choice.finish_reason == "tool_calls":
                 # End of a tool call sequence
                 break
-
-        message.content = content if content else None
-        message.tool_calls = tool_calls if tool_calls else None
+        
+        if content:
+            message.content = content
+        else:
+            message.tool_calls = tool_calls
 
         return message
