@@ -4,8 +4,12 @@ from typing import Dict
 
 
 class MetaToolInput(BaseModel):
-    tool_name: str = Field(..., description="Name of tool to call")
-    tool_args: Dict = Field(..., description="Required JSON of arguments to pass to tool, must conform to tool input schema")
+    tool_name: str = Field(..., description="Name of tool to call. CANNOT BE MetaTool")
+    tool_args: Dict = Field(
+        ...,
+        description="Required JSON of arguments to pass to tool, must conform to tool input schema. DO NOT USE THIS TOOL WITHOUT PROVIDING A VALUE FOR tool_args",
+    )
+
 
 class MetaTool(BaseTool):
     input_model = MetaToolInput
@@ -14,7 +18,7 @@ class MetaTool(BaseTool):
     async def execute(self, input_data: MetaToolInput) -> str:
         tool_name = input_data.tool_name
         if tool_name.startswith("functions."):
-            tool_name = tool_name[len("functions."):]
+            tool_name = tool_name[len("functions.") :]
 
         if tool_name == "MetaTool":
             return "I'm sorry but I cannot use the MetaTool to call the MetaTool as it might lead to infinite recursion."

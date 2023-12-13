@@ -57,7 +57,7 @@ class ToolKit:
                 tool_input = tool.input_model.model_validate(
                     json.loads(tool_call.function.arguments)
                 )
-                return await self.tools[name].execute(tool_input)
+                return await tool.execute(tool_input)
             except ValidationError as e:
                 error_str = f"Error validating {tool_call.function.arguments=}: {e}"
                 print(error_str)
