@@ -19,25 +19,23 @@ jobs:
     steps:
     - name: Check out repository
       uses: actions/checkout@v3
-      
+
     - name: Set up Python 3.12
       uses: actions/setup-python@v3
       with:
-        python-version: "3.12"
+        python-version: '3.12'
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Start Postgres service
+    - name: Build and start services
       run: |
-        docker run --name postgres -e POSTGRES_DB=assistant_db -e POSTGRES_USER=assistant_user -e POSTGRES_PASSWORD=abc123 -d -p 5432:5432 postgres:latest
-        sleep 10 # wait for Postgres to start
+        docker-compose -f docker-compose.yml up -d
+        sleep 10 # Wait for services to start up
 
-    - name: Test with pytest
-      env:
-        DATABASE_URL: postgresql://assistant_user:abc123@postgres:5432/assistant_db
+    - name: Run tests with pytest
       run: |
         pytest
 
