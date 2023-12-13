@@ -37,7 +37,7 @@ jobs:
 
     - name: Test with pytest
       env:
-        DATABASE_URL: postgresql://assistant_user:abc123@localhost:5432/assistant_db
+        DATABASE_URL: postgresql://assistant_user:abc123@postgres:5432/assistant_db
       run: |
         pytest
 
