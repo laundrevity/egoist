@@ -27,6 +27,12 @@ async def main():
         action="store_true",
         help="Return the response to the initial prompt, rather than initiating an interactive session",
     )
+    parser.add_argument(
+        "-a",
+        "--auto",
+        action="store_true",
+        help="Enable auto mode, wherein the Assistant will generate responses to itself automatically and always use the MetaTool"
+    )
     args = parser.parse_args()
 
     # Prevent default asyncio CTRL+C handling so Conversation can handle it

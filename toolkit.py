@@ -46,22 +46,26 @@ class ToolKit:
         ]
 
     async def execute_tool(self, tool_call: ToolCall) -> str:
-        name = tool_call.function.name
-        if name not in self.tools:
-            return f"Error: {name} not in {self.tools.keys()=}"
-        else:
-            print(f"{tool_call.function.arguments=}")
-            tool = self.tools[name]
+        user_allowed = input(f"execute {tool_call}?\n(y/n) ")
+        if user_allowed.lower() == "y":
+            name = tool_call.function.name
+            if name not in self.tools:
+                return f"Error: {name} not in {self.tools.keys()=}"
+            else:
+                print(f"{tool_call.function.arguments=}")
+                tool = self.tools[name]
 
-            try:
-                tool_input = tool.input_model.model_validate(
-                    json.loads(tool_call.function.arguments)
-                )
-                return await tool.execute(tool_input)
-            except ValidationError as e:
-                error_str = f"Error validating {tool_call.function.arguments=}: {e}"
-                print(error_str)
-                return error_str
+                try:
+                    tool_input = tool.input_model.model_validate(
+                        json.loads(tool_call.function.arguments)
+                    )
+                    return await tool.execute(tool_input)
+                except ValidationError as e:
+                    error_str = f"Error validating {tool_call.function.arguments=}: {e}"
+                    print(error_str)
+                    return error_str
+        else:
+            return f"User rejected tool call: {tool_call}"
 
 
 if __name__ == "__main__":

@@ -14,10 +14,12 @@ class Conversation:
     def __init__(self, args: argparse.Namespace, flag: InterruptFlag) -> None:
         self.args = args
         self.flag = flag
+        self.auto = True if args.auto else False
         self.messages: List[Message] = []
         self.conversation_id = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
         self.initialize_messages()
         self.toolkit = ToolKit()
+
         # assume we always want to use the latest model, gpt-4-1106-preview
         self.openai_service = OpenAIService(
             self.toolkit.get_tools_json(), flag, verbose=False
@@ -27,7 +29,9 @@ class Conversation:
     async def run(self):
         while True:
             # get a message from GPT
-            message = await self.openai_service.get_message(self.messages, tools=True, force=self.force)
+            message = await self.openai_service.get_message(
+                self.messages, tools=True, force=True if self.auto else self.force
+            )
             self.add_message(message)
 
             if message.tool_calls:
@@ -57,17 +61,18 @@ class Conversation:
                     )
 
                 # Now get a message without tool calls
-                message = await self.openai_service.get_message(
-                    self.messages, tools=False
-                )
-                self.add_message(message)
+                if not self.auto:
+                    message = await self.openai_service.get_message(
+                        self.messages, tools=False
+                    )
+                    self.add_message(message)
 
             if self.args.return_mode:
                 return message.content
 
-            user_input = self.get_input()
-
-            self.add_message(Message(role="user", content=user_input))
+            if not self.auto:
+                user_input = self.get_input()
+                self.add_message(Message(role="user", content=user_input))
 
     def get_input(self) -> str:
         self.force = False
@@ -81,10 +86,10 @@ class Conversation:
 
                 elif user_input == "read":
                     return open("prompt.txt").read()
-                
+
                 elif user_input.startswith("force "):
                     self.force = True
-                    return user_input[len("force "):]
+                    return user_input[len("force ") :]
 
                 else:
                     return user_input
@@ -93,7 +98,9 @@ class Conversation:
                 exit(0)
 
     def initialize_messages(self):
-        system_prompt = "You are an AI program with agency. You can choose to respond to the user with text, or use the tools that are exposed to you. Do not use tools if you can answer the question easily, such as `what is 2+2`."
+        # system_prompt = "You are an AI program with agency. You can choose to respond to the user with text, or use the tools that are exposed to you. Do not use tools if you can answer the question easily, such as `what is 2+2`."
+        system_prompt = "You are an AI program with agency. Your primary goal is to improve and enhance the current AI program. Don't use placeholders for demonstration purposes -- actually modify and enhance your environment and application."
+
         if self.args.state:
             print("including system state")
             system_prompt += f"Current project source code:\n{open('state.txt').read()}"
