@@ -13,7 +13,7 @@ services:
     entrypoint: ["sleep", "infinity"]
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-
+  postgres:
     image: postgres:latest
     environment:
       POSTGRES_DB: assistant_db
