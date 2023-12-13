@@ -13,27 +13,34 @@ permissions:
   contents: read
 
 jobs:
-  build:
-
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Check out repository
+      uses: actions/checkout@v3
+      
     - name: Set up Python 3.12
       uses: actions/setup-python@v3
       with:
         python-version: "3.12"
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint with flake8
+        pip install -r requirements.txt
+
+    - name: Start Postgres service
       run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        docker run --name postgres -e POSTGRES_DB=assistant_db -e POSTGRES_USER=assistant_user -e POSTGRES_PASSWORD=abc123 -d -p 5432:5432 postgres:latest
+        sleep 10 # wait for Postgres to start
+
     - name: Test with pytest
+      env:
+        DATABASE_URL: postgresql://assistant_user:abc123@localhost:5432/assistant_db
       run: |
         pytest
+
+    - name: Lint with flake8
+      run: |
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics

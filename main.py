@@ -21,6 +21,12 @@ async def main():
         action="store_true",
         help="Include state data in initial system prompt",
     )
+    parser.add_argument(
+        "-r",
+        "--return-mode",
+        action="store_true",
+        help="Return the response to the initial prompt, rather than initiating an interactive session",
+    )
     args = parser.parse_args()
 
     # Prevent default asyncio CTRL+C handling so Conversation can handle it
@@ -30,7 +36,8 @@ async def main():
         signal.SIGINT, stream_signal_handler, flag
     )
     conversation = Conversation(args, flag)
-    await conversation.run()
+    result = await conversation.run()
+    print(result)
 
 
 if __name__ == "__main__":

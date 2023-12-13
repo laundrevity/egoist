@@ -61,6 +61,9 @@ class Conversation:
                 )
                 self.add_message(message)
 
+            if self.args.return_mode:
+                return message.content
+
             user_input = self.get_input()
 
             self.add_message(Message(role="user", content=user_input))
@@ -73,6 +76,10 @@ class Conversation:
                     print(f"Tool menu:")
                     for tool_name, tool in self.toolkit.tools.items():
                         print(f"{tool_name} --- {tool.description}")
+
+                elif user_input == "read":
+                    return open("prompt.txt").read()
+
                 else:
                     return user_input
             except EOFError:

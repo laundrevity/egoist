@@ -63,19 +63,30 @@ class OpenAIService:
             message = self.parse_stream_chunks(stream_chunks)
         except StreamingInterruptedException as e:
             print(e)
-            message = Message(
-                role="system", content="\nStreaming response interrupted by user."
-            )
+            message = Message(role="assistant", content=str(e))
 
         if self.verbose:
             print(f"Received message: {message}")
 
+        if (
+            message.role == "assistant"
+            and not message.content
+            and not message.tool_calls
+        ):
+            error_content = "I'm sorry, there was an error processing the response -- both `content` and `tool_calls` are empty."
+            print(error_content)
+            return Message(
+                role="assistant",
+                content=error_content,
+            )
         return message
 
     async def get_stream_chunks(self, payload: Dict) -> List[StreamChunk]:
         print("Assistant: ", end="")
         chunks = []
         bad_status_code = False
+        partial_content = ""
+        partial_tool_calls = []
 
         async with self.client.stream(
             "POST", self.url, json=payload, headers=self.headers, timeout=300
@@ -101,15 +112,25 @@ class OpenAIService:
 
                                 content = stream_chunk.choices[0].delta.content
                                 if content:
+                                    partial_content += content
                                     print(content, end="")
 
                                 tool_calls = stream_chunk.choices[0].delta.tool_calls
                                 if tool_calls:
                                     tool_call_function = tool_calls[0].function
                                     if tool_call_function.name:
+                                        partial_tool_calls.append(
+                                            {
+                                                "function_name": tool_call_function.name,
+                                                "args": "",
+                                            }
+                                        )
                                         print(f"{tool_call_function}: ", end="")
                                     if tool_call_function.arguments:
                                         print(tool_call_function.arguments, end="")
+                                        partial_tool_calls[-1][
+                                            "args"
+                                        ] += tool_call_function.arguments
 
                                 chunks.append(stream_chunk)
                                 if self.verbose:
@@ -131,7 +152,7 @@ class OpenAIService:
 
                     if self.flag.get_streaming_interrupt():
                         raise StreamingInterruptedException(
-                            "Streaming interrupted by user."
+                            f"Streaming interrupted: received CTRL+C from user. Partial content: {partial_content if partial_content else partial_tool_calls}"
                         )
 
         if bad_status_code:
@@ -192,6 +213,7 @@ class OpenAIService:
                         last_tool_call.function.arguments += (
                             tool_call.function.arguments
                         )
+
             elif choice.finish_reason == "stop":
                 # End of a text response sequence
                 break

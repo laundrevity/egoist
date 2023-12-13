@@ -9,3 +9,19 @@ services:
       - .:/app
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: assistant_db
+      POSTGRES_USER: assistant_user
+      POSTGRES_PASSWORD: abc123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:

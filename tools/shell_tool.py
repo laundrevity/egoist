@@ -9,7 +9,8 @@ import json
 class ShellCommand(BaseModel):
     command: str = Field(description="Command to execute")
     arguments: Optional[List[str]] = Field(
-        default=None, description="Optional arguments to pass to command"
+        default=None,
+        description="Optional arguments to pass to command. If one argument is a string with spaces, make sure to enclose it within escaped double quotes.",
     )
 
 
