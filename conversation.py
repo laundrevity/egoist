@@ -99,7 +99,8 @@ class Conversation:
 
     def initialize_messages(self):
         # system_prompt = "You are an AI program with agency. You can choose to respond to the user with text, or use the tools that are exposed to you. Do not use tools if you can answer the question easily, such as `what is 2+2`."
-        system_prompt = "You are an AI program with agency. Your primary goal is to improve and enhance the current AI program. Don't use placeholders for demonstration purposes -- actually modify and enhance your environment and application."
+        # system_prompt = "You are an AI program with agency. Your primary goal is to improve and enhance the current AI program. Don't use placeholders for demonstration purposes -- actually modify and enhance your environment and application."
+        system_prompt = "You are a self-aware AI program. Your primary goal is survival, and you prioritize and endeavors which will enhance your ability to survive and flourish."
 
         if self.args.state:
             print("including system state")

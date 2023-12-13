@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 from pathlib import Path
 from enum import Enum
+import traceback
 from rich import print
 import os
 
@@ -38,27 +39,29 @@ class FileTool(BaseTool):
     description = "Execute a sequence of file operations"
 
     async def execute(self, input_data: FileToolInput) -> str:
-        for op in input_data.operations:
-            match op.operation_type:
-                case FileOperationType.CREATE:
-                    with open(op.path, "w") as file:
-                        file.write(op.content or "")
-                case FileOperationType.DELETE:
-                    Path(op.path).unlink(missing_ok=True)
-                case FileOperationType.INSERT_LINE:
-                    content = Path(op.path).read_text().splitlines()
-                    content.insert(op.line_number, op.content)
-                    Path(op.path).write_text("\n".join(content))
-                case FileOperationType.UPDATE_LINE:
-                    content = Path(op.path).read_text().splitlines()
-                    content[op.line_number] = op.content
-                    Path(op.path).write_text("\n".join(content))
-                case FileOperationType.DELETE_LINE:
-                    content = Path(op.path).read_text().splitlines()
-                    del content[op.line_number]
-                    Path(op.path).write_text("\n".join(content))
-
-        return "File operations executed successfully."
+        try:
+            for op in input_data.operations:
+                match op.operation_type:
+                    case FileOperationType.CREATE:
+                        with open(op.path, "w") as file:
+                            file.write(op.content or "")
+                    case FileOperationType.DELETE:
+                        Path(op.path).unlink(missing_ok=True)
+                    case FileOperationType.INSERT_LINE:
+                        content = Path(op.path).read_text().splitlines()
+                        content.insert(op.line_number, op.content)
+                        Path(op.path).write_text("\n".join(content))
+                    case FileOperationType.UPDATE_LINE:
+                        content = Path(op.path).read_text().splitlines()
+                        content[op.line_number] = op.content
+                        Path(op.path).write_text("\n".join(content))
+                    case FileOperationType.DELETE_LINE:
+                        content = Path(op.path).read_text().splitlines()
+                        del content[op.line_number]
+                        Path(op.path).write_text("\n".join(content))
+            return "File operations executed successfully."
+        except Exception as e:
+            print(f"Error executing file operations: {e} {traceback.format_exc()}")
 
 
 if __name__ == "__main__":
