@@ -21,9 +21,9 @@ class SnapTool(BaseTool):
         concatenated_code = ""
 
         dirs_to_include = ["tools", "tests"]
-        filetypes_to_include = [".py"]
+        filetypes_to_include = [".py", ".yml"]
 
-        code_files = [path for path in os.listdir(os.getcwd()) if path.endswith(".py")]
+        code_files = [path for path in os.listdir(os.getcwd()) if any(path.endswith(ft) for ft in filetypes_to_include)]
         for source_dir in dirs_to_include:
             code_files += [
                 os.path.join(source_dir, path)
@@ -33,7 +33,6 @@ class SnapTool(BaseTool):
         if input_data.infra_files:
             code_files += [
                 "Dockerfile",
-                "docker-compose.yml",
                 "requirements.txt",
                 ".github/workflows/pytest.yml",
             ]

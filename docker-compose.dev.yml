@@ -5,13 +5,14 @@ services:
     build: .
     ports:
       - "1337:1337"
-    volumes:
-      - .:/app
-    depends_on:
-      - postgres
     entrypoint: ["sleep", "infinity"]
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   postgres:
     image: postgres:latest
@@ -19,6 +20,11 @@ services:
       POSTGRES_DB: assistant_db
       POSTGRES_USER: assistant_user
       POSTGRES_PASSWORD: abc123
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U assistant_user -d assistant_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
