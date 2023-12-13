@@ -47,7 +47,7 @@ class OpenAIService:
         }
         self.url = "https://api.openai.com/v1/chat/completions"
 
-    async def get_message(self, messages: List[Message], tools: bool = False):
+    async def get_message(self, messages: List[Message], tools: bool = False, force: bool = False):
         payload = {
             "messages": [
                 message.model_dump(exclude_unset=True) for message in messages
@@ -57,6 +57,8 @@ class OpenAIService:
         }
         if tools:
             payload["tools"] = self.tools_json
+        if force:
+            payload["tool_choice"] = {"type": "function", "function": {"name": "MetaTool"}}
 
         try:
             stream_chunks = await self.get_stream_chunks(payload)

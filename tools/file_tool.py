@@ -9,11 +9,11 @@ import os
 
 
 class FileOperationType(Enum):
-    CREATE = "create"
-    DELETE = "delete"
-    INSERT_LINE = "insert_line"
-    UPDATE_LINE = "update_line"
-    DELETE_LINE = "delete_line"
+    CREATE = "CREATE"
+    DELETE = "DELETE"
+    INSERT_LINE = "INSERT_LINE"
+    UPDATE_LINE = "UPDATE_LINE"
+    DELETE_LINE = "DELETE_LINE"
 
 
 class FileOperation(BaseModel):

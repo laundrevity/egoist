@@ -22,11 +22,12 @@ class Conversation:
         self.openai_service = OpenAIService(
             self.toolkit.get_tools_json(), flag, verbose=False
         )
+        self.force = False
 
     async def run(self):
         while True:
             # get a message from GPT
-            message = await self.openai_service.get_message(self.messages, tools=True)
+            message = await self.openai_service.get_message(self.messages, tools=True, force=self.force)
             self.add_message(message)
 
             if message.tool_calls:
@@ -69,6 +70,7 @@ class Conversation:
             self.add_message(Message(role="user", content=user_input))
 
     def get_input(self) -> str:
+        self.force = False
         while True:
             try:
                 user_input = input("> ")
@@ -79,6 +81,10 @@ class Conversation:
 
                 elif user_input == "read":
                     return open("prompt.txt").read()
+                
+                elif user_input.startswith("force "):
+                    self.force = True
+                    return user_input[len("force "):]
 
                 else:
                     return user_input

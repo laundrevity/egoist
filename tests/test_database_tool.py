@@ -2,11 +2,14 @@ from tools.database_tool import DatabaseTool, DatabaseToolInput, DbOperation, Db
 from toolkit import ToolKit
 import pytest
 import json
+import os
 
 DATABASE_URL = "postgresql://assistant_user:abc123@postgres/assistant_db"
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(os.getenv('SKIP_DB_TESTS', 'false').lower() == 'true',
+                    reason="Skipping DatabaseTool tests in CI/CD environment")
 async def test_create_table():
     print("test create table")
     toolkit = ToolKit()
@@ -25,6 +28,8 @@ async def test_create_table():
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(os.getenv('SKIP_DB_TESTS', 'false').lower() == 'true',
+                    reason="Skipping DatabaseTool tests in CI/CD environment")
 async def test_insert_record():
     toolkit = ToolKit()
     db_tool = DatabaseTool(toolkit)
@@ -43,6 +48,8 @@ async def test_insert_record():
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(os.getenv('SKIP_DB_TESTS', 'false').lower() == 'true',
+                    reason="Skipping DatabaseTool tests in CI/CD environment")
 async def test_query_record():
     toolkit = ToolKit()
     db_tool = DatabaseTool(toolkit)
@@ -62,6 +69,8 @@ async def test_query_record():
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(os.getenv('SKIP_DB_TESTS', 'false').lower() == 'true',
+                    reason="Skipping DatabaseTool tests in CI/CD environment")
 async def test_update_record():
     toolkit = ToolKit()
     db_tool = DatabaseTool(toolkit)
@@ -80,6 +89,8 @@ async def test_update_record():
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(os.getenv('SKIP_DB_TESTS', 'false').lower() == 'true',
+                    reason="Skipping DatabaseTool tests in CI/CD environment")
 async def test_drop_table():
     toolkit = ToolKit()
     db_tool = DatabaseTool(toolkit)
